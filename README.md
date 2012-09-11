@@ -4,7 +4,7 @@ Game of Life in JavaScript
 This is an implementation of [Conway's Game of Life][game-of-life] in JavaScript.
 It is implemented using an [MVP architecture][mvp] and uses [state machines][state-machine]
 for managing application state. (Instead of formal view objects, the application uses
-Zepto.js wrapped elements as views.)
+jQuery wrapped elements as views.)
 
   [game-of-life]: http://en.wikipedia.org/wiki/Conway's_Game_of_Life
   [mvp]: http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93presenter
@@ -15,7 +15,7 @@ The application uses the following libraries:
   * [es5-shim](https://github.com/kriskowal/es5-shim)
   * [EventEmitter2](https://github.com/hij1nx/EventEmitter2)
   * [javascript-state-machine](https://github.com/jakesgordon/javascript-state-machine)
-  * [Zepto.js](http://zeptojs.com/)
+  * [jQuery](http://jquery.com/)
 
 License
 -------
