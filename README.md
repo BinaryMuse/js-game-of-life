@@ -10,6 +10,8 @@ jQuery wrapped elements as views.)
   [mvp]: http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93presenter
   [state-machine]: http://en.wikipedia.org/wiki/Finite-state_machine
 
+Check out the running application at http://binarymuse.github.com/js-game-of-life/.
+
 The application uses the following libraries:
 
   * [es5-shim](https://github.com/kriskowal/es5-shim)
