@@ -62,6 +62,10 @@ Game.prototype.saveToDb = function(name) {
 
 Game.prototype.loadFromDb = function(name) {
   var data = this.db.load(name);
+  this.loadFromJson(data);
+};
+
+Game.prototype.loadFromJson = function(data) {
   this.reset();
   for (var i in data) {
     for (var j in data[i]) {
@@ -417,6 +421,8 @@ $(function() {
   var COLS = 60;
   var INTERVAL = 15;
 
+  var data = '{"12":{"45":1},"13":{"47":1},"14":{"44":1,"45":1,"48":1,"49":1,"50":1},"43":{"15":1},"44":{"17":1},"45":{"14":1,"15":1,"18":1,"19":1,"20":1}}'
   var game = new Game(ROWS, COLS, INTERVAL);
   var gamePresenter = new GamePresenter("#game", game);
+  game.loadFromJson(JSON.parse(data));
 });
