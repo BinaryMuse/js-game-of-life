@@ -27,15 +27,29 @@
     table td.cell.alive {
       background-color: #333;
     }
+
+    select {
+      width: 300px;
+    }
   </style>
 </head>
 <body>
   <div id="game">
     <table class="grid"></table>
-    <button data-event='play'>Play</button>
-    <button data-event='pause'>Pause</button>
-    <button data-event='reset'>Reset</button>
-    <span class='iteration'>0</span>
+    <div>
+      <button data-event='play'>Play</button>
+      <button data-event='pause'>Pause</button>
+      <button data-event='reset'>Reset</button>
+      <span class='iteration'>0</span>
+    </div>
+    <div>
+      <button data-event='save'>Save</button>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <select id="save-id">
+        <option value="">Select a board:</option>
+      </select>
+      <button data-event='load'>Load</button>
+    </div>
   </div>
 </body>
 </html>

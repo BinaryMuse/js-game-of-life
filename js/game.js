@@ -5,13 +5,16 @@ function Game(rows, cols, iterationTime) {
   this.iterationTime = iterationTime;
   this.iterations = 0;
   this.grid = new Grid(rows, cols, this);
+  this.db = new GridDB(this.grid);
 
   this.state = StateMachine.create({
     initial: 'paused',
     events: [
       { name: 'play',  from: 'paused',  to: 'playing' },
       { name: 'pause', from: 'playing', to: 'paused'  },
-      { name: 'reset', from: 'paused',  to: 'paused'  }
+      { name: 'reset', from: 'paused',  to: 'paused'  },
+      { name: 'load',  from: 'paused',  to: 'paused'  },
+      { name: 'save',  from: 'paused',  to: 'paused'  }
     ]
   });
 
@@ -31,6 +34,14 @@ function Game(rows, cols, iterationTime) {
     this.iterations = 0;
     this.emit('reset');
   }.bind(this);
+
+  this.state.onload = function() {
+    this.emit('loading');
+  }.bind(this);
+
+  this.state.onsave = function() {
+    this.emit('saving');
+  }.bind(this);
 };
 
 Game.prototype = Object.create(EventEmitter2.prototype);
@@ -44,8 +55,28 @@ Game.prototype.tick = function() {
   }
 };
 
+Game.prototype.saveToDb = function(name) {
+  this.db.save(name);
+  this.emit('saved', name);
+};
+
+Game.prototype.loadFromDb = function(name) {
+  var data = this.db.load(name);
+  this.reset();
+  for (var i in data) {
+    for (var j in data[i]) {
+      var cell = this.grid.cell(i, j);
+      if (cell) cell.toggle();
+    }
+  }
+};
+
+Game.prototype.availableSaves = function() {
+  return this.db.keys();
+};
+
 // Delegate common state machine methods to the state machine
-['pause', 'play', 'reset', 'can', 'is'].forEach(function(event) {
+['pause', 'play', 'reset', 'save', 'load', 'can', 'is'].forEach(function(event) {
   Game.prototype[event] = function() {
     return this.state[event].apply(this.state, arguments);
   };
@@ -56,18 +87,25 @@ Game.prototype.tick = function() {
 
 function GamePresenter(selector, game) {
   this.view = $(selector);
-  this.buttons = this.view.find('button');
+  this.buttons = this.view.find('button[data-event]');
+  this.selector = this.view.find('select');
   this.iterations = this.view.find('.iteration');
 
   this.game = game;
 
   this.gridPresenter = new GridPresenter(this.view.find('.grid'), game, game.grid);
   this.setButtonState();
+  this.setSavedBoards();
 
   this.buttons.on('click', this.handleButtonClick.bind(this));
   this.game.on('stateChange', this.setButtonState.bind(this));
   this.game.on('tick', this.setIterationCount.bind(this));
   this.game.on('reset', this.resetIterationCount.bind(this));
+  this.game.on('saving', this.save.bind(this));
+  this.game.on('loading', this.load.bind(this));
+  this.game.on('saved', function(name) {
+    this.addSaveBoard(name, true);
+  }.bind(this));
 };
 
 GamePresenter.prototype.handleButtonClick = function(evt) {
@@ -84,12 +122,38 @@ GamePresenter.prototype.setButtonState = function() {
   }.bind(this));
 };
 
+GamePresenter.prototype.setSavedBoards = function() {
+  this.game.availableSaves().forEach(function(name) {
+    this.addSaveBoard(name);
+  }.bind(this));
+};
+
 GamePresenter.prototype.setIterationCount = function(count) {
   this.iterations.text(count);
 };
 
 GamePresenter.prototype.resetIterationCount = function() {
   this.setIterationCount(0);
+};
+
+GamePresenter.prototype.save = function() {
+  var name = "";
+  while (name.trim() == "") {
+    name = prompt("What do you want to name your save?", "");
+    if (name == null) return;
+  }
+  this.game.saveToDb(name.trim());
+};
+
+GamePresenter.prototype.load = function() {
+  var name = this.selector.val();
+  if (name == "") return;
+  this.game.loadFromDb(name);
+};
+
+GamePresenter.prototype.addSaveBoard = function(name, select) {
+  $("<option>").text(name).val(name).appendTo(this.selector);
+  if (select) this.selector.val(name);
 };
 
 // =============================================================================
@@ -309,11 +373,48 @@ Rules.prototype.transformations = function() {
 };
 
 // =============================================================================
+// GridDB
+
+function GridDB(grid) {
+  this.grid = grid;
+};
+
+GridDB.prototype = Object.create(EventEmitter2.prototype)
+
+GridDB.prototype.save = function(key) {
+  var data = {};
+  this.grid.everyCell(function(cell, row, col) {
+    if (cell.is('alive')) {
+      data[row] = (data[row] || {});
+      data[row][col] = 1;
+    }
+  });
+  localStorage['gol:' + key] = JSON.stringify(data);
+};
+
+GridDB.prototype.load = function(key) {
+  var data = localStorage['gol:' + key];
+  if (data) {
+    data = JSON.parse(data);
+  }
+  return data;
+};
+
+GridDB.prototype.keys = function() {
+  var keys = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var key = localStorage.key(i);
+    if (key.match(/^gol:/)) keys.push(key.replace('gol:', ''));
+  }
+  return keys;
+};
+
+// =============================================================================
 // Setup
 
 $(function() {
-  var ROWS = 70;
-  var COLS = 70;
+  var ROWS = 60;
+  var COLS = 60;
   var INTERVAL = 15;
 
   var game = new Game(ROWS, COLS, INTERVAL);
