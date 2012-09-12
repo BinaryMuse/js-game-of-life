@@ -4,7 +4,7 @@ Game of Life in JavaScript
 This is an implementation of [Conway's Game of Life][game-of-life] in JavaScript.
 It is implemented using an [MVP architecture][mvp] and uses [state machines][state-machine]
 for managing application state. (Instead of formal view objects, the application uses
-jQuery wrapped elements as views.)
+jQuery wrapped elements and a canvas 2D context as views.)
 
   [game-of-life]: http://en.wikipedia.org/wiki/Conway's_Game_of_Life
   [mvp]: http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93presenter

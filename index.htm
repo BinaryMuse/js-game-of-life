@@ -8,26 +8,6 @@
   <script type="text/javascript" src="js/deps/statemachine.js"></script>
   <script type="text/javascript" src="js/game.js"></script>
   <style>
-    table {
-      border-collapse: collapse;
-    }
-
-    table td.cell {
-      width: 10px;
-      height: 10px;
-      border: 1px solid black;
-      margin: 0;
-      padding: 0;
-    }
-
-    table td.cell.visited {
-      background-color: #3F9;
-    }
-
-    table td.cell.alive {
-      background-color: #333;
-    }
-
     select {
       width: 300px;
     }
@@ -35,7 +15,7 @@
 </head>
 <body>
   <div id="game">
-    <table class="grid"></table>
+    <canvas class="grid" width='601' height='601'></canvas>
     <div>
       <button data-event='play'>Play</button>
       <button data-event='pause'>Pause</button>

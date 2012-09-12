@@ -173,7 +173,7 @@ function Grid(rows, cols, game) {
   for (var i = 1; i <= rows; i++) {
     this.cells[i] = {};
     for (var j = 1; j <= cols; j++) {
-      this.cells[i][j] = new Cell(game, false);
+      this.cells[i][j] = new Cell(game, i, j, false);
     }
   };
 
@@ -252,21 +252,40 @@ Grid.prototype.neighbors = function(row, column) {
 // GridPresenter
 
 function GridPresenter(view, game, grid) {
+  this.grid = grid;
+  this.game = game;
+  this.view = view;
+  this.context = this.view.get(0).getContext('2d');
+  this.context.translate(0.5, 0.5); // get sharp lines
+  this.context.fillStyle = '#FFF';
+  this.context.save();
+  this.cellPresenters = {};
+
   for (var i = 1; i <= grid.rows; i++) {
-    var row = $("<tr>");
+    this.cellPresenters[i] = (this.cellPresenters[i] || {});
     for (var j = 1; j <= grid.cols; j++) {
-      var cellPresenter = new CellPresenter(game, grid.cell(i, j));
-      row.append(cellPresenter.view);
+      var cellPresenter = new CellPresenter(game, grid.cell(i, j), this.context);
+      this.cellPresenters[i][j] = cellPresenter;
     }
-    view.append(row);
   }
+
+  this.view.on('click', this.onClick.bind(this));
+};
+
+GridPresenter.prototype.onClick = function(evt) {
+  var row = Math.floor(evt.offsetY / 10) + 1;
+  var column = Math.floor(evt.offsetX / 10) + 1;
+  var presenter = this.cellPresenters[row][column];
+  presenter.onClick();
 };
 
 // =============================================================================
 // Cell
 
-function Cell(game, alive) {
+function Cell(game, row, column, alive) {
   this.game = game;
+  this.row = row;
+  this.column = column;
 
   this.state = StateMachine.create({
     initial: 'dead',
@@ -316,29 +335,32 @@ Cell.prototype = Object.create(EventEmitter2.prototype);
 // =============================================================================
 // CellPresenter
 
-function CellPresenter(game, cell) {
+function CellPresenter(game, cell, context) {
   this.game = game;
   this.cell = cell;
+  this.context = context;
   this.render();
   this.cell.on('stateChange', this.render.bind(this));
   this.cell.on('visitedChange', this.render.bind(this));
-  this.view.on('click', this.onClick.bind(this));
 };
 
 CellPresenter.prototype.render = function() {
-  this.view = (this.view || $("<td>").addClass('cell'));
+  var x = 10 * this.cell.column - 10;
+  var y = 10 * this.cell.row - 10;
+  this.context.save();
+  this.context.strokeStyle = '#000';
+  this.context.clearRect(x, y, 10, 10);
 
-  if (this.cell.state.current == 'alive') {
-    this.view.addClass('alive');
+  if (this.cell.state.current == 'dead') {
+    if (this.cell.visited.current == 'visited') {
+      this.context.fillStyle = '#3F9';
+    }
   } else {
-    this.view.removeClass('alive');
+    this.context.fillStyle = '#000';
   }
-
-  if (this.cell.visited.current == 'visited') {
-    this.view.addClass('visited');
-  } else {
-    this.view.removeClass('visited');
-  }
+  this.context.fillRect(x, y, 10, 10);
+  this.context.strokeRect(x, y, 10, 10);
+  this.context.restore();
 };
 
 CellPresenter.prototype.onClick = function() {
